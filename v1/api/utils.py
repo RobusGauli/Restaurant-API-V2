@@ -22,6 +22,20 @@ def keyrequire(*keys):
 			for key in keys:
 				if not key in request.json:
 					return jsonify(dict(error = 'missing Keys : ({0}) Please make sure keys are correct'.format(', '.join(keys))))
+
+			return func(*args, **kwargs)
+		return wrap
+	return decorator
+
+def lengthrequire(*keys, length=3):
+	'''This decorator is used to check the length of the string and also make sure that the value is string and not any other type'''
+	def decorator(func):
+		@wraps(func)
+		def wrap(*args, **kwargs):
+			for key in  keys:
+				value = request.json[key]
+				if not isinstance(value, str) or not len(value)>=length:
+					return jsonify(dict(code=400, error= 'Please make the length of the string >= {0} and value be the string'.format(length), error_type='LengthAndValueError'))
 			return func(*args, **kwargs)
 		return wrap
 	return decorator
@@ -55,4 +69,8 @@ def update_envelop(code):
 
 def delete_envelop(code):
 	response = {'meta' : dict(code=code, message='Deleted Successfully')}
+	return response
+
+def post_envelop(code):
+	response = {'meta' : dict(code=code, message='Created Successfully')}
 	return response

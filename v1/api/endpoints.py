@@ -1,20 +1,18 @@
 from flask import Flask, jsonify, url_for, redirect, request
-from models.model import ItemCategory, Item, Bill, ItemOrder
-from models.model import init_db
-from sqlalchemy.orm import sessionmaker
+from api.models.model import ItemCategory, Item, Bill, ItemOrder
+from api.models.model import init_db
+
+#from sqlalchemy.orm import sessionmaker
+from . import app, Session, engine
+
+
 from sqlalchemy.exc import IntegrityError
 #my own utils modules
-from utils import SessionManager, keyrequire
-from utils import envelop, error_envelop, update_envelop, delete_envelop
+from api.utils import SessionManager, keyrequire
+from api.utils import envelop, error_envelop, update_envelop, delete_envelop
 #for debugging
 import sys
-from utilendpoints import *
-URL_DB = 'postgres://postgres:robus@localhost:5432/restaurantv1'
 
-engine = init_db(URL_DB)
-
-app = Flask(__name__)
-Session = sessionmaker(bind=engine)
 
 @app.route('/api/v1/itemcategories', methods=['GET'])
 def getItemCategories():
@@ -267,5 +265,5 @@ def deleteCategoryItem(cat_id, item_id):
 
 
 
-if __name__ == '__main__':
-	app.run(host='localhost', port=5000, debug=True)
+# if __name__ == '__main__':
+# 	app.run(host='localhost', port=5000, debug=True)
