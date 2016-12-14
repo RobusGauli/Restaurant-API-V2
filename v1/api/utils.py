@@ -27,7 +27,7 @@ def keyrequire(*keys):
 		return wrap
 	return decorator
 
-def lengthrequire(*keys, length=3):
+def lengthrequire(*keys, length=1):
 	'''This decorator is used to check the length of the string and also make sure that the value is string and not any other type'''
 	def decorator(func):
 		@wraps(func)
@@ -63,14 +63,14 @@ def error_envelop(error_code, error_type, error_message):
 	return response
 
 
-def update_envelop(code):
-	response = {'meta' : dict(code=code, message='Updated Successfully')}
+def update_envelop(code, data=None):
+	response = {'meta' : dict(code=code, message='Updated Successfully'), 'data' : data}
 	return response
 
-def delete_envelop(code):
-	response = {'meta' : dict(code=code, message='Deleted Successfully')}
+def delete_envelop(code, data=None):
+	response = {'meta' : dict(code=code, message='Deleted Successfully'), 'data' : data }
 	return response
 
-def post_envelop(code):
-	response = {'meta' : dict(code=code, message='Created Successfully')}
+def post_envelop(code, data=None):
+	response = {'meta' : dict(code=code, message='Created Successfully'), 'data' : data}
 	return response
