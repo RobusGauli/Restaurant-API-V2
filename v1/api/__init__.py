@@ -12,4 +12,4 @@ Session = sessionmaker(bind=engine)
 
 
 from api import endpoints
-from api import utilityendpoints
+from api import utilityendpoints, customerendpoints
