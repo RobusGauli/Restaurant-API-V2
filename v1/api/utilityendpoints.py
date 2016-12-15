@@ -7,7 +7,7 @@ from api.utils import envelop, error_envelop, update_envelop, delete_envelop, po
 import sys
 #from flask 
 from flask import request, url_for, redirect, jsonify
-from api.models.model import  Bill, ItemOrder, Vat, ServiceCharge, Membership
+from api.models.model import  Bill, ItemOrder, Vat, ServiceCharge, Membership, Payment
 #for exceptions
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.exc import NoResultFound
@@ -263,4 +263,133 @@ def getServiceCharge(s_id):
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(s_id)))
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))			
 
+
+##------------****PAYMENT API *****-------------##
+
+@app.route('/api/v1/payments', methods=['POST'])
+@keyrequire('p_type')
+@lengthrequire('p_type', length=1)
+def setPayment():
+	'''This function is used to store the new payment in the database
+		Example : POST /api/v1/payments HTTP/1.1
+		{ "p_type": " onsite"}
+
+		Result : {
+					"meta": {
+					"code": 200,
+					"message": "Created Successfully"
+					}
+				}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			
+			p_type = request.json['p_type']
+			payment = Payment(p_type=p_type)
+			session.add(payment)
+			session.commit()
+			return jsonify(post_envelop(200, data = request.json))
+
+		except DataError: #this excepyion might probably occur if the value key has a value of non integer
+			return jsonify(error_envelop(400, 'DataError', 'Use the correct value'))
+
+		except IntegrityError:
+			return jsonify(error_envelop(400, 'IntegrityError','Value : {0} already exists'.format(p_type)))
+
+		except:
+			return jsonify(error_envelop(400,'UnknownError','Error need to be identified'))
+
+@app.route('/api/v1/payments', methods=['GET'])
+def getPayments():
+	'''This function will return the all the payments available
+		Example : GET /api/v1/payments HTTP/1.1
+		Result : {
+					"data": [
+					  {
+					"P_type": "onsite",
+					
+					},.....
+		'''
+	
+	with SessionManager(Session) as session:
+		try:
+			sql_payments = session.query(Payment).order_by(Payment.id).all()
+			payments = [dict(p_type=payment.p_type,
+								   id=payment.id,
+								   uri=url_for('getPayment', p_id=payment.id)
+								   ) for payment in sql_payments]
+			return jsonify(envelop(payments, 200))
+		except:
+			return jsonify(error_envelop(400, ' UnkownError', 'Error need to identified'))
+
+
+
+@app.route('/api/v1/payments/<int:p_id>', methods=['PUT'])
+@keyrequire('p_type')
+@lengthrequire('p_type')
+def updatePayment(p_id):
+	''' PUT /api/v1/payments/6 	HTTP/1.1
+		{"c_type" : "offsite"}
+
+		Result : {
+					"data": {
+					"p_type": "offsite"
+					},
+					"meta": {
+					"code": 200,
+					"message": "Updated Successfully"
+					}
+				}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			sql_payment = session.query(Payment).filter(Payment.id == p_id).one()
+			sql_payment.p_type = request.json.get('p_type', sql_payment.p_type)
+			session.commit()
+			return jsonify(update_envelop(200, data=request.json))
+		except IntegrityError:
+			# if name already exsits in database  
+			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
+		except:
+			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(p_id)))
+	#now the item is succesfulluy updated
+	
+
+@app.route('/api/v1/payments/<int:p_id>', methods=['DELETE'])
+def deletePayment(p_id):
+	with SessionManager(Session) as session:
+		try:
+			sql_payment = session.query(Payment).filter(Payment.id == p_id).one()
+			session.delete(sql_payment)
+			session.commit()
+			return jsonify(delete_envelop(200))
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(p_id)))
+	#if no except is caught
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))
+
+
+
+
+@app.route('/api/v1/payments/<int:p_id>', methods=['GET'])
+def getPayment(p_id):
+	'''This function will return the particular payment from list of payments
+		Example : GET /api/v1/payments/1 	HTTP/1.1
+		Result : {
+					"id": 1,
+					"uri" : "/api/v1/payments/1"
+					"p_type": "onsite"
+					}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			sql_payment = session.query(Payment).filter(Payment.id == p_id).one()
+			p_type = sql_payment.p_type
+			id = sql_payment.id
+			uri = url_for('getPayment', p_id=sql_payment.id)
+			data = dict(p_type=p_type, id=id, uri=uri)
+			return jsonify(envelop(data, 200))
+		except NoResultFound:
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(p_id)))
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))			
 
