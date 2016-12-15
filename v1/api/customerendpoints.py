@@ -157,3 +157,22 @@ def getMembership(m_id):
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(m_id)))
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))	
 
+
+
+## ------ CUSTOMERS------ ##
+@app.route('/api/v1/memberships/<int:m_id>/customers', methods=['POST'])
+@keyrequire('first_name', 'last_name','gender', 'age')
+def setCustomersByMembership(m_id):
+	'''This function is used to set the customer based on membership_id as a foriegn key'''
+	with SessionManager(Session) as session:
+		try:
+			first_name = request.json['first_name']
+			middle_name = request.json.get('middle_name', None)
+			last_name = request.json['last_name']
+			contact_number = request.json.get('contact_number', 'No Contact')
+			address = request.json.get('address', 'No Address')
+			gender = request.json['gender']
+			age = request.json.get['age']
+			email = request.json('email', 'Email Not Available')
+
+		
