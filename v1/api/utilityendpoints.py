@@ -1,4 +1,7 @@
 ''' API Endpoints for vat, tax, service charge '''
+
+	
+
 from . import Session, app
 #my own utils modules
 from api.utils import SessionManager, keyrequire, lengthrequire
@@ -92,10 +95,10 @@ def updateVat(vat_id):
 		except IntegrityError:
 			# if name already exsits in database  
 			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
-		except:
-			return jsonify(error_envelop(404, 'ValueError', 'Id not found'))
+		except NoResultFound:
+			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(vat_id)))
 	#now the item is succesfulluy updated
-	
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))
 
 
 @app.route('/api/v1/vats/<int:vat_id>', methods=['DELETE'])
@@ -221,9 +224,10 @@ def updateServiceCharge(s_id):
 		except IntegrityError:
 			# if name already exsits in database  
 			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
-		except:
+		except NoResultFound:
 			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(s_id)))
 	#now the item is succesfulluy updated
+	return jsonify(error_envelop(400,'UnknownError','Error need to be identified'))
 	
 
 @app.route('/api/v1/servicecharges/<int:s_id>', methods=['DELETE'])
@@ -350,9 +354,10 @@ def updatePayment(p_id):
 		except IntegrityError:
 			# if name already exsits in database  
 			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
-		except:
+		except NoResultFound:
 			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(p_id)))
 	#now the item is succesfulluy updated
+	return jsonify(error_envelop(400,'UnknownError','Error need to be identified'))
 	
 
 @app.route('/api/v1/payments/<int:p_id>', methods=['DELETE'])
@@ -451,7 +456,8 @@ def getDinetables():
 			dinetables = [dict(capacity=dinetable.capacity,
 							   id=dinetable.id,
 							   alias = dinetable.alias,
-							   uri = url_for('getDineTable', d_id=dinetable.id)
+							   uri = url_for('getDineTable', d_id=dinetable.id),
+							   status = dinetable.status
 								   ) for dinetable in sql_dinetables]
 			return jsonify(envelop(dinetables, 200))
 		except:
@@ -479,13 +485,17 @@ def updateDineTable(d_id):
 			sql_dinetable = session.query(DineTable).filter(DineTable.id == d_id).one()
 			sql_dinetable.alias = request.json.get('alias', sql_dinetable.alias)
 			sql_dinetable.capacity = request.json.get('capacity', sql_dinetable.capacity)
+			sql_dinetable.status = request.json.get('status', sql_dinetable.status)
 			session.commit()
 			return jsonify(update_envelop(200, data=request.json))
 		except IntegrityError:
 			# if name already exsits in database  
 			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
-		except:
+		except NoResultFound:
 			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(d_id)))
+		except DataError:
+			return jsonify(error_envelop(404, 'DataError', 'Please use the status of enum : (unorder, order, served, cooking, empty) defined'))
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))
 	#now the item is succesfulluy updated
 	
 
@@ -520,8 +530,11 @@ def getDineTable(d_id):
 			id = sql_dinetable.id
 			capacity = sql_dinetable.capacity
 			uri = url_for('getDineTable', d_id=sql_dinetable.id)
-			data = dict(alias=alias, capacity=capacity, id=id, uri=uri)
+			status = sql_dinetable.status
+			data = dict(alias=alias, capacity=capacity, id=id, uri=uri, status=status)
 			return jsonify(envelop(data, 200))
 		except NoResultFound:
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(d_id)))
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))	
+
+
