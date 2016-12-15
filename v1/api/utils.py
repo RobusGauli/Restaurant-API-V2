@@ -33,9 +33,10 @@ def lengthrequire(*keys, length=1):
 		@wraps(func)
 		def wrap(*args, **kwargs):
 			for key in  keys:
-				value = request.json[key]
-				if not isinstance(value, str) or not len(value)>=length:
-					return jsonify(dict(code=400, error= 'Please make the length of the string >= {0} and value be the string'.format(length), error_type='LengthAndValueError'))
+				if key in request.json:
+					value = request.json[key]
+					if not isinstance(value, str) or not len(value)>=length:
+						return jsonify(dict(code=400, error= 'Please make the length of the string >= {0} and value be the string'.format(length), error_type='LengthAndValueError'))
 			return func(*args, **kwargs)
 		return wrap
 	return decorator
