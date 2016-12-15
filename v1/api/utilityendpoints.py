@@ -7,7 +7,7 @@ from api.utils import envelop, error_envelop, update_envelop, delete_envelop, po
 import sys
 #from flask 
 from flask import request, url_for, redirect, jsonify
-from api.models.model import  Bill, ItemOrder, Vat
+from api.models.model import  Bill, ItemOrder, Vat, ServiceCharge, Membership
 #for exceptions
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.exc import NoResultFound
@@ -34,7 +34,7 @@ def setVat():
 			vat = Vat(name=name, value=value)
 			session.add(vat)
 			session.commit()
-			return jsonify(post_envelop(200))
+			return jsonify(post_envelop(200, data = request.json))
 
 		except DataError: #this excepyion might probably occur if the value key has a value of non integer
 			return jsonify(error_envelop(400, 'DataError', 'Use the correct value'))
@@ -60,7 +60,7 @@ def getVats():
 	with SessionManager(Session) as session:
 		try:
 			sql_vats = session.query(Vat).order_by(Vat.id).all()
-			vats = [dict(name=vat.name, value=vat.value, id=vat.id) for vat in sql_vats]
+			vats = [dict(name=vat.name, value=vat.value, id=vat.id, uri=url_for('getVat', vat_id=vat.id)) for vat in sql_vats]
 			return jsonify(envelop(vats, 200))
 		except:
 			return jsonify(error_envelop(400, ' UnkownError', 'Error need to identified'))
@@ -134,3 +134,133 @@ def getVat(vat_id):
 		except NoResultFound:
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(vat_id)))
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))			
+
+
+
+### --------- ******Service Charge******** ------------- ####
+
+@app.route('/api/v1/servicecharges', methods=['POST'])
+@keyrequire('name', 'value')
+@lengthrequire('name', length=1)
+def setServiceCharge():
+	'''This function is used to store the new servicecharge in the database
+		Example : POST /api/v1/service charges HTTP/1.1
+		{"name" : "Service Charge", "value":10}
+
+		Result : {
+					"meta": {
+					"code": 200,
+					"message": "Created Successfully"
+					}
+				}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			name = request.json['name']
+			value = request.json['value']
+			service_charge = ServiceCharge(name=name, value=value)
+			session.add(service_charge)
+			session.commit()
+			return jsonify(post_envelop(200, data = request.json))
+
+		except DataError: #this excepyion might probably occur if the value key has a value of non integer
+			return jsonify(error_envelop(400, 'DataError', 'Use the correct value'))
+
+		except IntegrityError:
+			return jsonify(error_envelop(400, 'IntegrityError','Value : {0} already exists'.format(name)))
+
+		except:
+			return jsonify(error_envelop(400,'UnknownError','Error need to be identified'))
+
+@app.route('/api/v1/servicecharges', methods=['GET'])
+def getServiceCharges():
+	'''This function will return the all the service charges available
+		Example : GET /api/v1/servicecharges HTTP/1.1
+		Result : {
+					"data": [
+					  {
+					"name": "service charge",
+					"value": 10
+					},.....
+		'''
+	
+	with SessionManager(Session) as session:
+		try:
+			sql_servicecharges = session.query(ServiceCharge).order_by(ServiceCharge.id).all()
+			servicecharges = [dict(name=service.name,
+								   value=service.value,
+								   id=service.id,
+								   uri=url_for('getServiceCharge', s_id=service.id)) for service in sql_servicecharges]
+			return jsonify(envelop(servicecharges, 200))
+		except:
+			return jsonify(error_envelop(400, ' UnkownError', 'Error need to identified'))
+
+@app.route('/api/v1/servicecharges/<int:s_id>', methods=['PUT'])
+@lengthrequire('name')
+def updateServiceCharge(s_id):
+	''' PUT /api/v1/servicecharges/6 	HTTP/1.1
+		{"name" : "New service name", "value" : 34}
+
+		Result : {
+					"data": {
+					"name": "New service name"
+					},
+					"meta": {
+					"code": 200,
+					"message": "Updated Successfully"
+					}
+				}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			sql_service = session.query(ServiceCharge).filter(ServiceCharge.id == s_id).one()
+			sql_service.name = request.json.get('name', sql_service.name)
+			sql_service.value = request.json.get('value', sql_service.value)
+			session.commit()
+			return jsonify(update_envelop(200, data=request.json))
+		except IntegrityError:
+			# if name already exsits in database  
+			return jsonify(error_envelop(400, 'Integrity Error','Name already Exists'))
+		except:
+			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(s_id)))
+	#now the item is succesfulluy updated
+	
+
+@app.route('/api/v1/servicecharges/<int:s_id>', methods=['DELETE'])
+def deleteServiceCharge(s_id):
+	with SessionManager(Session) as session:
+		try:
+			sql_service = session.query(ServiceCharge).filter(ServiceCharge.id == s_id).one()
+			session.delete(sql_service)
+			session.commit()
+			return jsonify(delete_envelop(200))
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(s_id)))
+	#if no except is caught
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))
+
+@app.route('/api/v1/servicecharges/<int:s_id>', methods=['GET'])
+def getServiceCharge(s_id):
+	'''This function will return the particular vat from the list of vats
+		Example : GET /api/v1/servicescharges/1 	HTTP/1.1
+		Result : {
+					"id": 1,
+					"uri" : "/api/v1/servicecharges/1"
+					"name": "Charges",
+					"value": 10
+					}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			sql_service = session.query(ServiceCharge).filter(ServiceCharge.id == s_id).one()
+			name = sql_service.name
+			value = sql_service.value
+			service_charge_id = sql_service.id
+			uri = url_for('getServiceCharge', s_id=service_charge_id)
+			data = dict(name=name, value=value, id=service_charge_id, uri=uri)
+			return jsonify(envelop(data, 200))
+		except NoResultFound:
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(s_id)))
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))			
+
+
