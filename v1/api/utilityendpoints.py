@@ -108,6 +108,29 @@ def deleteVat(vat_id):
 			return jsonify(delete_envelop(200))
 		except NoResultFound: #causes when there is no requested id in the database
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(vat_id)))
-	#if succesfully deleted
+	#if no except is caught
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))
 
+@app.route('/api/v1/vats/<int:vat_id>', methods=['GET'])
+def getVat(vat_id):
+	'''This function will return the particular vat from the list of vats
+		Example : GET /api/v1/vats/1 	HTTP/1.1
+		Result : {
+					"id": 1,
+					"uri" : "/api/v1/vats/1"
+					"name": "Coke Vat",
+					"value": 13
+					}
+	'''
+	with SessionManager(Session) as session:
+		try:
+			sql_vat = session.query(Vat).filter(Vat.id == vat_id).one()
+			name = sql_vat.name
+			value = sql_vat.value
+			vat_id = sql_vat.id
+			uri = url_for('getVat', vat_id=vat_id)
+			data = dict(name=name, value=value, id=vat_id, uri=uri)
+			return jsonify(envelop(data, 200))
+		except NoResultFound:
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(vat_id)))
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))			
