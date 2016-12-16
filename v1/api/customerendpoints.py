@@ -12,6 +12,7 @@ from api.models.model import Membership, Customer
 #for exceptions
 from sqlalchemy.exc import IntegrityError, DataError
 from sqlalchemy.orm.exc import NoResultFound
+#from psycopg2 import IntegrityError 
 
 @app.route('/api/v1/memberships', methods=['POST'])
 @keyrequire('m_type','discount')
@@ -160,19 +161,72 @@ def getMembership(m_id):
 
 
 ## ------ CUSTOMERS------ ##
+
 @app.route('/api/v1/memberships/<int:m_id>/customers', methods=['POST'])
 @keyrequire('first_name', 'last_name','gender', 'age')
+@lengthrequire('first_name', 'last_name', 'address', 'email', length=2) #checking the lenght of the input fields
 def setCustomersByMembership(m_id):
 	'''This function is used to set the customer based on membership_id as a foriegn key'''
+	
 	with SessionManager(Session) as session:
 		try:
 			first_name = request.json['first_name']
-			middle_name = request.json.get('middle_name', None)
 			last_name = request.json['last_name']
-			contact_number = request.json.get('contact_number', 'No Contact')
-			address = request.json.get('address', 'No Address')
+			middle_name = request.json.get('middle_name', 'NA')
+			contact_number = request.json.get('contact_number', 'NA')
+			address = request.json.get('address', 'NA')
 			gender = request.json['gender']
-			age = request.json.get['age']
-			email = request.json('email', 'Email Not Available')
+			age = request.json['age']
+			email = request.json.get('email', 'NA')
+			if not 6 <= int(age) < 99:
+				return jsonify(error_envelop(400, "Age Error", "Please enter the age between 6 and 99 "))
 
-		
+			
+
+			c = Customer(first_name = first_name,
+						 last_name = last_name,
+						 contact_number = contact_number,
+						 address = address,
+						 gender = gender,
+						 age =age,
+						 membership_id=m_id,
+						 middle_name=middle_name,
+						 email=email)
+			session.add(c)
+			session.commit()
+			return jsonify(post_envelop(200, data=request.json))
+
+		except DataError: #this excepyion might probably occur if the value key has a value of non integer
+			return jsonify(error_envelop(400, 'DataError', 'Use the correct value'))
+
+		except IntegrityError:
+			return jsonify(error_envelop(400, 'IntegrityError','Violates foreign key ({0}) constraint'.format(m_id)))
+
+		except:
+			return jsonify(error_envelop(400,'UnknownError','Error need to be identified'))
+
+@app.route('/api/v1/memberships/<int:m_id>/customers/<int:c_id>', methods=['PUT'])
+@lengthrequire('first_name', 'last_name', 'address', 'email', length=2) #make sure the length is more than or equal to 2
+def updateCustomerByMembership(m_id, c_id):
+	with SessionManager(Session) as session:
+		try:
+			customer = session.query(Customer).filter(Customer.id == c_id).one()
+			customer.first_name = request.json.get('first_name', customer.first_name)
+			customer.middle_name = request.json.get('middle_name', customer.middle_name)
+			customer.last_name = request.json.get('last_name', customer.last_name)
+			customer.address = request.json.get('address', customer.address)
+			customer.gender = request.json.get('gender', customer.gender)
+			customer.age = request.json.get('age', customer.age)
+			customer.email = request.json.get('email', customer.email)
+			try:
+				customer.age = int(customer.age)
+			except:
+				return jsonify(error_envelop(200, "AgeError", 'Plase use the integer for age'))
+
+			if not 7 < int(customer.age) < 99 :
+				return jsonify(error_envelop(400, 'AgeError', 'Please input the valid age between 7 and 99'))
+			#id everything goes right ..make the commit
+			session.commit()
+			return jsonify(update_envelop(200, data=request.json))
+		except:
+			return jsonify(error_envelop(400, 'UnknownError', 'Error need to be identified!!'))

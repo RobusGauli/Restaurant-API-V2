@@ -62,7 +62,7 @@ class Membership(BASE):
 
 class Customer(BASE):
     __tablename__ = 'customers'
-    
+    # we need to keep the name of customer to be unique which is not done yet
     id = Column(Integer, primary_key=True)
     first_name = Column(String(100), nullable=False)
     middle_name = Column(String(100), nullable=True)
