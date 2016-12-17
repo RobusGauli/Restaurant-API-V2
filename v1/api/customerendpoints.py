@@ -230,3 +230,75 @@ def updateCustomerByMembership(m_id, c_id):
 			return jsonify(update_envelop(200, data=request.json))
 		except:
 			return jsonify(error_envelop(400, 'UnknownError', 'Error need to be identified!!'))
+
+
+@app.route('/api/v1/memberships/<int:m_id>/customers', methods=['GET'])
+def getCustomersByMembership(m_id):
+	'''A function to get the customers based on memberships'''
+
+	with SessionManager(Session) as session:
+		try:
+			sql_customers = session.query(Customer).filter(Customer.membership_id == m_id).order_by(Customer.id).all()
+			customers = [dict(first_name = customer.first_name,
+							  middle_name = customer.middle_name,
+							  last_name = customer.last_name,
+							  contact_number = customer.contact_number,
+							  address = customer.address,
+							  gender = customer.gender,
+							  age = customer.age,
+							  email = customer.email,
+							  id = customer.id,
+							  uri = url_for('getCustomerByMembership', m_id=m_id, c_id = customer.id),
+							  customer_join_date = customer.customer_join_date) for customer in sql_customers]
+			return jsonify(envelop(data = customers, code=200))
+			
+		except:
+			return jsonify(error_envelop(400, 'UnkownError', 'Somethig went wrong'))
+
+@app.route('/api/v1/memberships/<int:m_id>/customers/<int:c_id>', methods=['DELETE'])
+def deleteCustomerByMembership(m_id, c_id):
+
+	with SessionManager(Session) as session:
+		try:
+			sql_customer = session.query(Customer).filter(Customer.id == c_id).one()
+			session.delete(sql_customer)
+			session.commit()
+			return jsonify(delete_envelop(200))
+
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', ' Cannot delete!!Id : {0} Not Found'.format(m_id)))
+
+		except:
+			return jsonify(error_envelop(400, 'UnknownError', 'Somethig went wrong'))
+
+@app.route('/api/v1/memberships/<int:m_id>/customers/<int:c_id>', methods=['GET'])
+def getCustomerByMembership(m_id, c_id):
+
+	with SessionManager(Session) as session:
+		try:
+			sql_customer = session.query(Customer).filter(Customer.id == c_id).one()
+			sql_membership = sql_customer.c_membership
+			customer = dict(
+							id = sql_customer.id,
+							uri = url_for('getCustomerByMembership', m_id=m_id, c_id=c_id),
+							first_name = sql_customer.first_name,
+							middle_name = sql_customer.middle_name,
+							last_name = sql_customer.last_name,
+							contact_number = sql_customer.contact_number,
+							gender = sql_customer.gender,
+							age = sql_customer.age,
+							email = sql_customer.email,
+							customer_join_date = sql_customer.customer_join_date,
+							address = sql_customer.address,
+							membership = dict(m_type = sql_membership.m_type,
+											  discount = sql_membership.discount,
+											  id = sql_membership.id,
+											  uri = url_for('getMembership', m_id=m_id))
+							)
+			return jsonify(envelop(customer, 200))
+
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', ' Cannot Get!!Id : {0} Not Found'.format(c_id)))
+
+		except:
+			return jsonify(error_envelop(400, 'UnknownError', 'Something went wrong'))
