@@ -302,3 +302,5 @@ def getCustomerByMembership(m_id, c_id):
 
 		except:
 			return jsonify(error_envelop(400, 'UnknownError', 'Something went wrong'))
+
+
