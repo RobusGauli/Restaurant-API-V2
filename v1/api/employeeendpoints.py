@@ -203,6 +203,10 @@ def setEmployeeByPosition(p_id):
 @app.route('/api/v1/employeepositions/<int:p_id>/employees/<int:e_id>', methods=['PUT'])
 @lengthrequire('first_name', 'last_name', 'address', 'email', length=2) #make sure the length is more than or equal to 2
 def updateEmployeeByPosition(p_id, e_id):
+	'''{"first_name" : "Robus sujan gauli", "last_name" : "Gasd" , "gender" : "M", "date_of_birth" : "2014-12-12", "salary" : 2343 , "contact_number" : "27567344", "address" : "ktdm" , "age"  : 13}
+	'''
+
+	
 	with SessionManager(Session) as session:
 		try:
 			#employee = session.query(Employee).filter(Employee.id == e_id).one()
@@ -239,3 +243,89 @@ def updateEmployeeByPosition(p_id, e_id):
 			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(e_id)))
 		except:
 			return jsonify(error_envelop(400, 'UnknownError', 'Error need to be identified!!'))
+
+
+
+
+
+@app.route('/api/v1/employeepositions/<int:p_id>/employees', methods=['GET'])
+def getEmployeesByPositions(p_id):
+	'''A function to get the customers based on Positions'''
+
+	with SessionManager(Session) as session:
+		try:
+			sql_employees = session.query(Employee).filter(Employee.employee_position_id == p_id).order_by(Employee.id).all()
+			employees = [dict(first_name = employee.first_name,
+							  middle_name = employee.middle_name,
+							  last_name = employee.last_name,
+							  contact_number = employee.contact_number,
+							  address = employee.address,
+							  gender = employee.gender,
+							  age = employee.age,
+							  email = employee.email,
+							  id = employee.id,
+							  date_of_birth = employee.date_of_birth,
+							  salary = employee.date_of_birth,
+							  photo_uri = employee.photo_uri,
+							  #uri = url_for('getCustomerByMembership', m_id=m_id, c_id = customer.id),
+							  join_date = employee.join_date) for employee in sql_employees]
+			return jsonify(envelop(data = employees, code=200))
+			
+		except:
+			return jsonify(error_envelop(400, 'UnkownError', 'Somethig went wrong'))
+
+
+@app.route('/api/v1/employeepositions/<int:p_id>/employees/<int:e_id>', methods=['DELETE'])
+def deleteEmployeeByPosition(p_id, e_id):
+
+	with SessionManager(Session) as session:
+		try:
+			sql_employee = session.query(Employee).filter(Employee.id == e_id).one()
+			session.delete(sql_employee)
+			session.commit()
+			return jsonify(delete_envelop(200))
+
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', ' Cannot delete!!Id : {0} Not Found'.format(e_id)))
+
+		except:
+			return jsonify(error_envelop(400, 'UnknownError', 'Somethig went wrong'))
+
+
+
+@app.route('/api/v1/employeepositions/<int:p_id>/employees/<int:e_id>', methods=['GET'])
+def getEmployeeByPosition(p_id, e_id):
+
+	with SessionManager(Session) as session:
+		try:
+			sql_employee = session.query(Employee).filter(Employee.id == e_id).one()
+			sql_position = sql_employee.e_position
+			employee = dict(
+							id = sql_employee.id,
+							uri = url_for('getEmployeeByPosition', p_id=p_id, e_id=e_id),
+							first_name = sql_employee.first_name,
+							middle_name = sql_employee.middle_name,
+							last_name = sql_employee.last_name,
+							contact_number = sql_employee.contact_number,
+							gender = sql_employee.gender,
+							age = sql_employee.age,
+							email = sql_employee.email,
+							join_date = sql_employee.join_date,
+							address = sql_employee.address,
+							date_of_birth = sql_employee.date_of_birth,
+							salary = sql_employee.salary,
+							photo_uri = sql_employee.photo_uri,
+							position = dict(name = sql_position.name,
+											  description = sql_position.description,
+											  id = sql_position.id,
+											  uri = url_for('getEmployeePosition', p_id=p_id))
+							)
+			return jsonify(envelop(employee, 200))
+
+		except NoResultFound: #causes when there is no requested id in the database
+			return jsonify(error_envelop(404, 'NoResultFound', ' Cannot Get!!Id : {0} Not Found'.format(e_id)))
+
+		except:
+			return jsonify(error_envelop(400, 'UnknownError', 'Something went wrong'))
+
+
