@@ -351,3 +351,7 @@ def getCustomer(c_id):
 		except NoResultFound:
 			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(c_id)))
 	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))	
+
+
+
+	#hello tbis is bad thign t ot do
