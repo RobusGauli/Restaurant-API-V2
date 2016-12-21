@@ -59,7 +59,7 @@ def envelop(data, code, pagination=None):
 	return response
 
 def error_envelop(error_code, error_type, error_message):
-	response = {'meta' : dict(error_type=error_type, error_code=error_code, error_message=error_message)
+	response = {'meta' : dict(error_type=error_type, code=error_code, error_message=error_message)
 	}
 	return response
 

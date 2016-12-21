@@ -304,3 +304,50 @@ def getCustomerByMembership(m_id, c_id):
 			return jsonify(error_envelop(400, 'UnknownError', 'Something went wrong'))
 
 
+#url for '/customers'
+@app.route('/api/v1/customers', methods=['GET'])
+def getCustomers():
+	with SessionManager(Session) as session:
+
+		sql_customers = session.query(Customer).order_by(Customer.id).all()
+		customers = [dict(first_name=customer.first_name,
+						  middle_name=customer.middle_name,
+						  last_name=customer.last_name,
+						  contact_number=customer.contact_number,
+						  address=customer.address,
+						  gender=customer.gender,
+						  age=customer.age,
+						  email=customer.email,
+						  id=customer.id,
+						  customer_join_date=customer.customer_join_date,
+						  membership=dict(m_type=customer.c_membership.m_type, 
+						  				  discount=customer.c_membership.discount,
+						  				  description=customer.c_membership.description,
+						  				  id=customer.c_membership.id))
+					for customer in sql_customers]
+		return jsonify(envelop(data=customers, code=200))
+	return jsonify(error_envelop(404, 'UnknownError', 'Error need to be identified'))
+
+@app.route('/api/v1/customers/<int:c_id>', methods=['GET'])
+def getCustomer(c_id):
+	with SessionManager(Session) as session:
+		try:
+			sql_customer = session.query(Customer).filter(Customer.id == c_id).one()
+			customer=dict(first_name=sql_customer.first_name,
+						  middle_name=sql_customer.middle_name,
+						  last_name=sql_customer.last_name,
+						  contact_number=sql_customer.contact_number,
+						  address=sql_customer.address,
+						  gender=sql_customer.gender,
+						  age=sql_customer.age,
+						  email=sql_customer.email,
+						  id=sql_customer.id,
+						  customer_join_date=sql_customer.customer_join_date,
+						  membership=dict(m_type=sql_customer.c_membership.m_type, 
+						  				  discount=sql_customer.c_membership.discount,
+						  				  description=sql_customer.c_membership.description,
+						  				  id=sql_customer.c_membership.id))
+			return jsonify(envelop(data=customer, code=200))
+		except NoResultFound:
+			return jsonify(error_envelop(404, 'NoResultFound', 'Id : {0} Not Found'.format(c_id)))
+	return jsonify(error_envelop(100, 'UnknownError', 'UnknownError Found'))	
