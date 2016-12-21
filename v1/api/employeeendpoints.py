@@ -329,3 +329,50 @@ def getEmployeeByPosition(p_id, e_id):
 			return jsonify(error_envelop(400, 'UnknownError', 'Something went wrong'))
 
 
+@app.route('/api/v1/employees', methods=['GET'])
+def getEmployees():
+	with SessionManager(Session) as session:
+		sql_employees = session.query(Employee).order_by(Employee.id).all()
+		employees = [dict(first_name = employee.first_name,
+							  middle_name = employee.middle_name,
+							  last_name = employee.last_name,
+							  contact_number = employee.contact_number,
+							  address = employee.address,
+							  gender = employee.gender,
+							  age = employee.age,
+							  email = employee.email,
+							  id = employee.id,
+							  date_of_birth = employee.date_of_birth,
+							  salary = employee.date_of_birth,
+							  photo_uri = employee.photo_uri,
+							  position = dict(name=employee.e_position.name, 
+							  				  description=employee.e_position.description,
+							  				  id=employee.e_position.id),
+							  #uri = url_for('getCustomerByMembership', m_id=m_id, c_id = customer.id),
+							  join_date = employee.join_date) for employee in sql_employees]
+		return jsonify(envelop(data=employees, code=200))
+	return jsonify(error_envelop(400, 'UnknownError', 'Error need to be identified'))
+@app.route('/api/v1/employees/<int:e_id>', methods=['GET'])
+def getEmployee(e_id):
+
+	with SessionManager(Session) as session:
+		sql_employee = session.query(Employee).filter(Employee.id == e_id).one()
+		position = sql_employee.e_position
+		employee = dict(first_name = sql_employee.first_name,
+							  middle_name = sql_employee.middle_name,
+							  last_name = sql_employee.last_name,
+							  contact_number = sql_employee.contact_number,
+							  address = sql_employee.address,
+							  gender = sql_employee.gender,
+							  age = sql_employee.age,
+							  email = sql_employee.email,
+							  id = sql_employee.id,
+							  date_of_birth = sql_employee.date_of_birth,
+							  salary = sql_employee.date_of_birth,
+							  photo_uri = sql_employee.photo_uri,
+							  position=dict(name=position.name, description=position.description, id=position.id),
+							  
+							  #uri = url_for('getCustomerByMembership', m_id=m_id, c_id = customer.id),
+							  join_date = sql_employee.join_date)
+		return jsonify(envelop(data=employee, code=200))
+
