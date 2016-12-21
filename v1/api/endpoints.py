@@ -114,9 +114,12 @@ def setCategoryItem(cat_id):
 
 	name = request.json['name']
 	unit_price = int(request.json['unit_price'])
+	description = request.json.get('description', 'NA')
+	item_photo_uri = request.json.get('item_photo_uri', 'NA')
+
 	with SessionManager(Session) as session:
 		category = session.query(ItemCategory).filter(ItemCategory.id==cat_id).one()
-		category_item = Item(name=name, unit_price=unit_price)
+		category_item = Item(name=name, unit_price=unit_price, description=description, item_photo_uri=item_photo_uri)
 		category.c_items.append(category_item)
 		session.commit()
 	return jsonify(dict(status='created'))
@@ -136,7 +139,8 @@ def getCategoryItems(cat_id):
 								  name=item.name,
 								  unit_price=item.unit_price,
 								  item_photo_uri = item.item_photo_uri,
-								  url_id = url_for('getItem', item_id = item.id)									)
+								  url_id = url_for('getItem', item_id = item.id),
+								  description = item.description)
 								  for item in items]
 		except:
 			return jsonify(error_envelop(error_code=404, error_type='Value Error', error_message='ID is not available'))
@@ -174,7 +178,9 @@ def getItems():
 				 id=item.id, name=item.name,
 				 item_photo_uri=item.item_photo_uri,
 				 description=item.description,
-				 unit_price=item.unit_price)
+				 unit_price=item.unit_price,
+				 #item_category = dict(name=item.item_category.name, extra=item.item_category.extra, id = item.item_category.id)
+				 )
 				 for item in sql_items]
 	return jsonify(envelop(data=items, code=200, pagination=pagination))
 
@@ -195,12 +201,15 @@ def getItem(item_id):
 		#check to see if id exisst in items list
 		try:
 			sql_item = sesion.query(Item).filter(Item.id == item_id).one()
+			sql_item_cat = sql_item.item_category
+
 			item['name'] = sql_item.name
 			item['id'] = sql_item.id
 			item['url_id'] = url_for('getItem', item_id=item_id)
 			item['item_photo_uri']  = sql_item.item_photo_uri
 			item['description'] = sql_item.description
 			item['unit_price'] = sql_item.unit_price
+			item['item_category'] = dict(name=sql_item_cat.name, extra=sql_item_cat.extra, id=sql_item_cat.id)
 		except:
 			return jsonify(error_envelop(404, 'ValueError', 'Invalid ID'))
 	return jsonify(envelop(data=item, code=200))
