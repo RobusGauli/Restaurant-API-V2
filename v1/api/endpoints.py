@@ -179,7 +179,7 @@ def getItems():
 				 item_photo_uri=item.item_photo_uri,
 				 description=item.description,
 				 unit_price=item.unit_price,
-				 #item_category = dict(name=item.item_category.name, extra=item.item_category.extra, id = item.item_category.id)
+				 item_category_id = item.item_category_id
 				 )
 				 for item in sql_items]
 	return jsonify(envelop(data=items, code=200, pagination=pagination))
