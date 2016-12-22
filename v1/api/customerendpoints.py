@@ -218,6 +218,7 @@ def updateCustomerByMembership(m_id, c_id):
 			customer.gender = request.json.get('gender', customer.gender)
 			customer.age = request.json.get('age', customer.age)
 			customer.email = request.json.get('email', customer.email)
+			customer.contact_number = request.json.get('contact_number', customer.contact_number)
 			try:
 				customer.age = int(customer.age)
 			except:
