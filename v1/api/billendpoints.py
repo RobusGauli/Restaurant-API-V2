@@ -74,3 +74,48 @@ def setBill():
 
 
 
+@app.route('/api/v1/bills/<int:b_id>', methods=['GET'])
+def getBills(b_id):
+	with SessionManager(Session) as session:
+
+		bill = session.query(Bill).filter(Bill.id == b_id).one()
+		customer = bill.customer.first_name
+		dinetable = bill.dinetable.alias
+		employee = bill.employee.first_name
+		payment = bill.payment.p_type
+		vat = bill.vat.name
+		service_charge = bill.service_charge.name 
+
+		bill_description = bill.bill_description
+		on_site = bill.on_site
+		total_price = bill.total_price
+
+		items_orders = bill.items
+		list_item_orders = []
+		for item_order in items_orders:
+			list_item_orders.append(dict(item_id = item_order.item_id,
+										 bill_id = item_order.bill_id,
+										 quantity = item_order.quantity,
+										 order_price = item_order.order_price,
+										 order_time_stamp = item_order.order_time_stamp,
+										 item_name = item_order.item.name,
+										 item_unit_price = item_order.item.unit_price))
+
+
+		b = dict(customer=customer,
+				 dinetable=dinetable,
+				 employee=employee,
+				 payment=payment,
+				 vat=vat,
+				 service_charge=service_charge,
+				 bill_description=bill_description,
+				 on_site=on_site,
+				 total_price=total_price,
+				 item_orders = list_item_orders)
+		return jsonify(envelop(data=b, code=200))
+
+
+
+
+
+
