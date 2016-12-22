@@ -355,4 +355,4 @@ def getCustomer(c_id):
 
 
 
-	#hello tbis is bad thign t ot do
+	
