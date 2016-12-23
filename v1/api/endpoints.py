@@ -245,6 +245,7 @@ def updateCategoryItem(cat_id, item_id):
 			#it will return the value if exists or throws an exception if does not find one
 			sql_item.name = request.json.get('name', sql_item.name)
 			sql_item.unit_price = request.json.get('unit_price', sql_item.unit_price)
+			sql_item.description = request.json.get('description', sql_item.description)
 			session.commit()
 		except:
 			return jsonify(error_envelop(404, 'ValueError', 'Id : {0} not found'.format(item_id)))
