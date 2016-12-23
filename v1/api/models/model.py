@@ -56,7 +56,7 @@ class Membership(BASE):
     description = Column(Text, default='Description Not Available')
     
     #relationship
-    m_customers = relationship('Customer', back_populates='c_membership')
+    m_customers = relationship('Customer', back_populates='c_membership',cascade='all, delete, delete-orphan')
     
 
 
@@ -92,7 +92,7 @@ class EmployeePosition(BASE):
     description = Column(String(700), default='Description Not Available')
     
     #relationshipo
-    p_employees = relationship('Employee', back_populates='e_position')
+    p_employees = relationship('Employee', back_populates='e_position', cascade='all, delete, delete-orphan')
     
 class Employee(BASE):
     __tablename__ = 'employees'
