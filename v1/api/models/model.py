@@ -174,6 +174,7 @@ class Bill(BASE):
     total_price = Column(Float, nullable=False)
     bill_description = Column(String(500), default='Description Not Available')
     on_site = Column(Boolean, default=True)
+    bill_time_stamp = Column(DateTime, default=func.now())
     
     #foreign keys
     customer_id = Column(Integer, ForeignKey('customers.id'))
