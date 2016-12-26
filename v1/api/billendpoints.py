@@ -91,6 +91,7 @@ def getBill(b_id):
 			bill_description = bill.bill_description
 			on_site = bill.on_site
 			total_price = bill.total_price
+			bill_time_stamp = bill.bill_time_stamp
 
 			items_orders = bill.items
 			list_item_orders = []
@@ -109,6 +110,7 @@ def getBill(b_id):
 					 employee=employee,
 					 payment=payment,
 					 vat=vat,
+					 bill_time_stamp = str(bill_time_stamp),
 					 service_charge=service_charge,
 					 bill_description=bill_description,
 					 on_site=on_site,
@@ -142,6 +144,7 @@ def getBills():
 			bill_description = sql_bill.bill_description
 			on_site = sql_bill.on_site
 			total_price = sql_bill.total_price
+			bill_time_stamp = sql_bill.bill_time_stamp
 			b = dict(customer=customer,
 				 dinetable=dinetable,
 				 employee=employee,
@@ -151,7 +154,8 @@ def getBills():
 				 bill_description=bill_description,
 				 on_site=on_site,
 				 total_price=total_price,
-				 id = sql_bill.id
+				 id = sql_bill.id,
+				 bill_time_stamp = str(bill_time_stamp)
 				 )
 			bills.append(b)
 		return jsonify(envelop(data=bills, code=200))
