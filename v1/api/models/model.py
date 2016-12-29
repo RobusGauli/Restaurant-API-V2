@@ -258,7 +258,8 @@ class Vendor(BASE):
     ##many to many relationship
     products = relationship('PurchaseOrder', back_populates='vendor')
     
-    
+
+
     
 
 def init_db(url):
